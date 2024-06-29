@@ -228,14 +228,9 @@ int main() {
         //, {3.5, 4.5}  //Centroid 
     //};
 
-    //ADF EG
-    //std::vector<vec2> inputPoints = {
-        //{0,0}, {0, 5}, {0, 10}, {5, 10}, {10, 5}, {10, 0}, {5, 0}, {7.5, 2.5}, {6, 6.5}, {3, 3}, {3.8, 7}
-    //};
-
     random_device rd;
     mt19937 gen(rd());
-    uniform_real_distribution<> dis(-30.0, 30.0);
+    uniform_real_distribution<> dis(-100.0, 100.0);
 
     vector<vec2> inputPoints{};
     int iterationSize = 10; //100 or 1000

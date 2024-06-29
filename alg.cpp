@@ -524,6 +524,10 @@ vector<vec2> advancingFront(vector<vec2> convexHull, vector<vec2> inputPoints) {
 
         //If Target == Vec2(0,0) it means determinante is never > 0
         std::cout << "Ponto Interno Escolhido (Target): " << target << std::endl;
+        if (target == vec2{0,0}) {
+            std::cout << "Erro de Target = Vec2(0,0)\n";
+            return resultado;
+        }
 
         //Now let's advance the front and we have our new triangle
         
@@ -608,6 +612,11 @@ vector<vec2> advancingFront(vector<vec2> convexHull, vector<vec2> inputPoints) {
                 current_edge = index_deleted;
             }
         }
+        else if (delete_count == 3) {
+            //I have already deleted the whole triangle from the boundary.
+            //TODO: We need to see if this is a good ideia, i mean, just set zero is it ok?
+            current_edge = 0;
+        }
         else {
             std::cout << "Algo deu errado na logica implementada: " << delete_count << std::endl;
             std::cout << "Resultado Parcial no momento do erro:\n";
@@ -625,12 +634,12 @@ vector<vec2> advancingFront(vector<vec2> convexHull, vector<vec2> inputPoints) {
         }
 
         //Stop Condition
-        if (boundary.size() <= 3 || resultado.size() >= 3 * ((2 * inputPoints.size()) - 2 - convexHull.size())) {
+        if (boundary.size() <= 3 || resultado.size() >= 6 * ((2 * inputPoints.size()) - 2 - convexHull.size())) {
             bool cond1 = false; bool cond2 = false;
             if (boundary.size() <= 3) {
                 cond1 = true;
             }
-            if (resultado.size() >= 3 * ((2 * inputPoints.size()) - 2 - convexHull.size())) {
+            if (resultado.size() >= 6 * ((2 * inputPoints.size()) - 2 - convexHull.size())) {
                 cond2 = true;
             }
             std::cout << "Entrou no Stop Condition!!! -> Motivo: ";
