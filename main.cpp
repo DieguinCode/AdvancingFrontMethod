@@ -225,7 +225,7 @@ int main() {
     //SQUARE
     std::vector<vec2> inputPoints{
         {1, 2}, {1, 7}, {6, 2}, {6, 7}
-        , {3.5, 4.5} //Centroid 
+        , {3.5, 4.5}  //Centroid 
     };
 
     //ADF EG
