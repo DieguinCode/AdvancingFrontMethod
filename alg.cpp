@@ -525,6 +525,7 @@ vector<vec2> advancingFront(vector<vec2> convexHull, vector<vec2> inputPoints) {
         //If Target == Vec2(0,0) it means determinante is never > 0
         std::cout << "Ponto Interno Escolhido (Target): " << target << std::endl;
         if (target == vec2{0,0}) {
+            //TODO: What we need to do in this case? What decision we gonna make?
             std::cout << "Erro de Target = Vec2(0,0)\n";
             return resultado;
         }

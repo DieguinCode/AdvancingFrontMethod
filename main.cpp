@@ -230,13 +230,13 @@ int main() {
 
     random_device rd;
     mt19937 gen(rd());
-    uniform_real_distribution<> dis(-100.0, 100.0);
+    uniform_real_distribution<> dis(-500.0, 500.0);
 
     vector<vec2> inputPoints{};
     int iterationSize = 10; //100 or 1000
     int pointCount = 0;
     for (int i = 0; i < iterationSize; i++) {
-        inputPoints.push_back(vec2((round(dis(gen))), (round(dis(gen)))));
+        inputPoints.push_back(vec2(((dis(gen))), ((dis(gen)))));
         pointCount += 1;
         if (pointCount >= iterationSize) break;
     }
