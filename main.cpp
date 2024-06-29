@@ -208,7 +208,7 @@ int main() {
 
     //std::vector<vec2> inputPoints = {
         //{1, 1}, {2, 1}, {4, 3}, {3, 2}, {1, -3}, {3, -2}, {-2, -1}, {-4, -3}, {-3, 3}, {-2, 2}
-    //}; -> OK
+    //};
 
     //std::vector<vec2> inputPoints = {
         //{1.1, 1.2}, {2.3, 1.4}, {4.5, 3.6}, {3.7, 4.01}, {1.9, -3.01}, {3.12, -2.34},
@@ -223,10 +223,10 @@ int main() {
     //else { std::cout << "'A' está à direita de 'B'" << std::endl; }
 
     //SQUARE
-    std::vector<vec2> inputPoints{
-        {1, 2}, {1, 7}, {6, 2}, {6, 7}
-        , {3.5, 4.5}  //Centroid 
-    };
+    //std::vector<vec2> inputPoints{
+        //{1, 2}, {1, 7}, {6, 2}, {6, 7}
+        //, {3.5, 4.5}  //Centroid 
+    //};
 
     //ADF EG
     //std::vector<vec2> inputPoints = {
@@ -237,11 +237,11 @@ int main() {
     mt19937 gen(rd());
     uniform_real_distribution<> dis(-30.0, 30.0);
 
-    //vector<vec2> inputPoints{};
-    int iterationSize = 5; //100 or 1000
+    vector<vec2> inputPoints{};
+    int iterationSize = 10; //100 or 1000
     int pointCount = 0;
     for (int i = 0; i < iterationSize; i++) {
-        //inputPoints.push_back(vec2((round(dis(gen))), (round(dis(gen)))));
+        inputPoints.push_back(vec2((round(dis(gen))), (round(dis(gen)))));
         pointCount += 1;
         if (pointCount >= iterationSize) break;
     }

@@ -511,7 +511,9 @@ vector<vec2> advancingFront(vector<vec2> convexHull, vector<vec2> inputPoints) {
                 double determinante = (point.x - a.x) * (b.y - a.y) - (point.y - a.y) * (b.x - a.x);
                 if (determinante > 0.0) {
                     //We need to check what it's the closest.
-                    double distancia = sqrt(std::pow(point.x - a.x, 2) + std::pow(point.y - a.y, 2));
+                    double distancia_a = sqrt(std::pow(point.x - a.x, 2) + std::pow(point.y - a.y, 2));
+                    double distancia_b = sqrt(std::pow(point.x - b.x, 2) + std::pow(point.y - b.y, 2));
+                    double distancia = (distancia_a + distancia_b) / 2;
                     if (distancia < min_dist) {
                         target = point;
                         min_dist = distancia;
@@ -623,8 +625,22 @@ vector<vec2> advancingFront(vector<vec2> convexHull, vector<vec2> inputPoints) {
         }
 
         //Stop Condition
-        if (boundary.size() <= 3) {
-            std::cout << "Entrou no Stop Condition!!!\n";
+        if (boundary.size() <= 3 || resultado.size() >= 3 * ((2 * inputPoints.size()) - 2 - convexHull.size())) {
+            bool cond1 = false; bool cond2 = false;
+            if (boundary.size() <= 3) {
+                cond1 = true;
+            }
+            if (resultado.size() >= 3 * ((2 * inputPoints.size()) - 2 - convexHull.size())) {
+                cond2 = true;
+            }
+            std::cout << "Entrou no Stop Condition!!! -> Motivo: ";
+            if (cond1) {
+                std::cout << "Tamanho da fronteira <= 3\n";
+            }
+            else {
+                std::cout << "Limite Numero de Triangulos\n";
+            }
+            std::cout << "Numero de Triangulos: " << resultado.size() << std::endl;
             std::cout << "Resultado Final dos Triangulos:\n";
             for (size_t i = 0; i < resultado.size(); i++) {
                 std::cout << resultado.at(i) << std::endl;
