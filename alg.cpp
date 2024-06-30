@@ -598,7 +598,8 @@ vector<vec2> advancingFront(vector<vec2> convexHull, vector<vec2> inputPoints) {
         else if (delete_count == 2) {
             //Add 1 nova edge no boundary
 
-            if (index_deleted > 0 && boundary.at(index_deleted - 1).second == target) {
+            if ((index_deleted > 0 && boundary.at(index_deleted - 1).second == target)
+                || (index_deleted == 0 && !(boundary.at(0).first == target))) {
                 //std::cout << "HAHHAAHAHAH" << endl;
                 pair<vec2, vec2> target_b{ target, b };
                 boundary.insert(boundary.begin() + index_deleted, target_b);
