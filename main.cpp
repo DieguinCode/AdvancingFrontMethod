@@ -233,7 +233,7 @@ int main() {
     uniform_real_distribution<> dis(-500.0, 500.0);
 
     vector<vec2> inputPoints{};
-    int iterationSize = 10; //100 or 1000
+    int iterationSize = 20; //100 or 1000
     int pointCount = 0;
     for (int i = 0; i < iterationSize; i++) {
         inputPoints.push_back(vec2(((dis(gen))), ((dis(gen)))));
@@ -241,28 +241,24 @@ int main() {
         if (pointCount >= iterationSize) break;
     }
 
-    //vector<vec2> copy{ inputPoints.begin(), inputPoints.end() };
+    vector<vec2> copy{ inputPoints.begin(), inputPoints.end() };
 
     //auto start = steady_clock::now();
 
-    // Call the magic!
-    std::vector<vec2> convexHull = jarvis(&inputPoints);
+    // Call the Convex Hull magic!
+    std::vector<vec2> convexHull = jarvis(&copy);
     
     //auto end = steady_clock::now();
 
     //I would like to see at a terminal too
-    std::cout << "Convex Hull: " << endl;
+    //std::cout << "Convex Hull: " << endl;
 
-    for (int i = 0; i < convexHull.size(); i++) {
-        std::cout << convexHull.at(i) << endl;
-    }
-    cout << endl;
+    //for (int i = 0; i < convexHull.size(); i++) {
+        //std::cout << convexHull.at(i) << endl;
+    //}
+    //cout << endl;
 
-    //Now we have the Convex Hull and the input Points.
-    //Boundary + Internal Points = Full set of points
-    vector<vec2> internalPoints = getInternPoints(convexHull, inputPoints);
-
-    vector<vec2> triangulation = advancingFront(convexHull, inputPoints);
+    vector<vec2> triangulation = advancingFront(inputPoints);
 
     //auto elapsed = end - start;
     //cout  << "Jarvis Time: " << duration_cast<milliseconds>(elapsed).count() << " ms" << endl;

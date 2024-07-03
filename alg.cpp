@@ -124,7 +124,7 @@ int partitionVec2(vector<vec2>* points, int startIndex, int endIndex, const char
         return i;
     }
     else {
-        runtime_error("Invalid Parameter!");
+        throw runtime_error("Invalid Parameter!");
     }
 }
 
@@ -137,7 +137,7 @@ void quickSortStepVec2(vector<vec2>* vec, int startIndex, int endIndex, const ch
         quickSortStepVec2(vec, pivotIndex + 1, endIndex, parameter);
     }
     else {
-        runtime_error("Invalid Parameter!");
+        throw runtime_error("Invalid Parameter!");
     }
 }
 
@@ -255,15 +255,15 @@ int quad(vec2 p) {
 
 //Used inside std::sort function -> Sorting in CCW order
 bool compare(vec2 p1, vec2 q1) {
-    vec2 p{ p1.x - mid.x, p1.y - mid.y };
-    vec2 q{ q1.x - mid.x, q1.y - mid.y };
+    vec2 p(p1.x - mid.x, p1.y - mid.y);
+    vec2 q(q1.x - mid.x, q1.y - mid.y);
 
     int one = quad(p);
     int two = quad(q);
 
     if (one != two)
-        return (one < two);
-    return (p.y * q.x < q.y * p.x);
+        return (one > two);
+    return (p.y * q.x > q.y * p.x);
 }
 
 // Checks the orientation of the triplet (a, b, c)
@@ -458,207 +458,235 @@ vector<vec2> mergeHull(vector<vec2> points) {
     return res;
 }
 
-vector<vec2> getInternPoints(vector<vec2> convexHull, vector<vec2> inputPoints) {
-    vector<vec2> resultado{};
-    for (size_t i = 0; i < inputPoints.size(); i++) {
-        vec2 tmp = inputPoints.at(i);
-        bool point = true;
-        for (size_t j = 0; j < convexHull.size(); j++) {
-            if (tmp == convexHull.at(j)) {
-                point = false;
-                break;
-            }
-        }
-        if (point) {
-            resultado.push_back(tmp);
-        }
-    }
-    return resultado;
-}
+//Advancing Front
 
-vector<vec2> advancingFront(vector<vec2> convexHull, vector<vec2> inputPoints) {
+vector<vec2> advancingFront(vector<vec2>& inputPoints) {
     
-    //Empty Final Vector
-    vector<vec2> resultado{};
+    vector<vec2> convexHull = jarvis(&inputPoints);
+    double x = 0, y = 0;
+    for (auto &point : convexHull) {
+        x = x + point.x;
+        y = y + point.y;
+    }
+    // - 1 --> Because point[0] appears twice.
+    x = x / (convexHull.size() - 1);
+    y = y / (convexHull.size() - 1);
 
-    //List of Edges in the current Boundary (In first moment, it's the convexHull itself).
+    mid.x = x; mid.y = y;
+    //sort(convexHull.begin(), convexHull.end(), compare);
+
     vector<pair<vec2, vec2>> boundary{};
     for (size_t i = 0; i < convexHull.size() - 1; i++) {
-        pair<vec2, vec2> new_pair{};
-        new_pair.first = convexHull.at(i);
-        new_pair.second = convexHull.at(i + 1);
-        boundary.push_back(new_pair);
-        std::cout << "Edge " << i + 1 << ": " << "[ " << new_pair.first << " ], [ " << new_pair.second << " ]\n";
+        vec2 a = convexHull.at(i);
+        vec2 b = convexHull.at(i + 1);
+        boundary.emplace_back(std::make_pair(a, b));
     }
 
-    bool cond = true;
-    int current_edge = 0;
-    int count_loop = 0;
-    while (cond) {
+    return adf_magic(inputPoints, boundary);
+}
+
+bool intersec2D(const pair<vec2, vec2>& r, const pair<vec2, vec2>& s) {
+
+    vec2 k = r.first; vec2 l = r.second;
+    vec2 m = s.first; vec2 n = s.second;
+    
+    if (k == l || m == n) {
+        std::cout << "Problema 1 em intersec2D" << std::endl;
+        return false;
+    }
+    
+    if ((k == m && l == n) || (k == n && l == m)) {
+        std::cout << "Segmentos iguais foram passados para intersec2D\n";
+        return false;
+    }
+
+    double det = (n.x - m.x) * (l.y - k.y) - (n.y - m.y) * (l.x - k.x);
+
+    if (det == 0.0) { return false; } // não há intersecção
+    else { return true; } //há intersecção
+
+}
+
+static bool rotationIndexPosition(const vector<pair<vec2, vec2>>* points, const vec2& q) {
+    //Points is a vector of polygon's vertices, e.g, for a square, we have p0, p1, p2, p3.
+
+    vector<double> angles{};
+
+    for (int i = 0; i < points->size(); i++) {
+        //We'll need -> vec2(p_i - q) and (P_i+1 - q) -> We gonna call vec2(a) and vec2(b)
+        //Extra Case: In the last loop, we gonna have -> vec(p_max - q) and vec2(p_0 - q)
+
+        vec2 a{};
+        vec2 b{};
+
+        a = points->at(i).first - q;
+        b = points->at(i).second - q;
+
+        //The angle between a and b = arc cos((a . b) / (|a| |b|))
+        double teta = acos((a.dot(b)) / (a.mag() * b.mag()));
+        teta = teta * 180.0 / PI; //Rad -> Degrees
+
+        angles.push_back(teta);
+    }
+
+    double sum = 0;
+
+    for (int i = 0; i < angles.size(); i++) {
+        sum += angles.at(i);
+    }
+
+    //I will tolerate an error of up to 1e-3
+    //+-1 -> Inside -> True
+    if (((1 <= sum / 360) and (sum / 360 <= 1 + 1e-3)) or ((-1 >= sum / 360) and (sum / 360 >= -1 - 1e-3))) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+static bool isConvexHull(const vector<pair<vec2, vec2>>& originalBoundary, const vec2& point) {
+    for (auto &edge: originalBoundary) {
+        if ((edge.first == point) || (edge.second == point)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+vector<vec2> adf_magic(vector<vec2> inputPoints, vector<pair<vec2, vec2>>& boundary){
+    
+    vector<pair<vec2, vec2>> originalBoundary{ boundary.begin(), boundary.end() };
+
+    //Empty Final Set
+    vector<vec2> resultado{};
+
+    //Let's put the boundary in a stack
+   
+    cout << "Convex Hull:" << endl;
+    for (auto& edge: boundary) {
+        std::cout << "(" << edge.first.x << ", " << edge.first.y << "), (" <<
+            edge.second.x << ", " << edge.second.y << "),\n";
+    }
+    
+    std::cout << "Tamanho inicial da Pilha: " << boundary.size() << std::endl;
+
+    bool stop_condition = false; int main_while_control = 1;
+    vector<pair<vec2, double>> rank_distance{};
+    //TOPO DA PILHA = PRIMEIRO ELEMENTO DO VECTOR
+    while (!stop_condition) {
+
+        std::cout << "LOOP PRINCIPAL: " << main_while_control << endl;
+
+        pair<vec2, vec2> current_edge = boundary.front();
+        vec2 a = current_edge.first; vec2 b = current_edge.second;
         
-        std::cout << "Loop Number: " << count_loop << endl;
+        if (a == b) {
+            boundary.erase(boundary.begin());
+            std::cout << "Pulei iteration pois a == b\n";
+            continue;
+        }
 
-        //First, we need the current edge.
-        vec2 a = boundary.at(current_edge).first;
-        vec2 b = boundary.at(current_edge).second;
-
-        //Run through all the set of points, but sure, we are not interested in 'a' and 'b' points.
-        double min_dist = INFINITY;
-        vec2 target{};
-        for (size_t k = 0; k < inputPoints.size(); k++) {
-            vec2 point = inputPoints.at(k);
-            if (!(point == a) && !(point == b)) {
+        for (auto &point: inputPoints) {
+            if(!(point == a) && !(point == b)){
                 double determinante = (point.x - a.x) * (b.y - a.y) - (point.y - a.y) * (b.x - a.x);
                 if (determinante > 0.0) {
-                    //We need to check what it's the closest.
-                    double distancia_a = sqrt(std::pow(point.x - a.x, 2) + std::pow(point.y - a.y, 2));
-                    double distancia_b = sqrt(std::pow(point.x - b.x, 2) + std::pow(point.y - b.y, 2));
-                    double distancia = (distancia_a + distancia_b) / 2;
-                    if (distancia < min_dist) {
-                        target = point;
-                        min_dist = distancia;
+                    if (rotationIndexPosition(&boundary, point) || isConvexHull(boundary, point)) {
+                        double distancia_a = sqrt(std::pow(point.x - a.x, 2) + std::pow(point.y - a.y, 2));
+                        double distancia_b = sqrt(std::pow(point.x - b.x, 2) + std::pow(point.y - b.y, 2));
+                        double distancia = (distancia_a + distancia_b) / 2;
+                        rank_distance.emplace_back(std::make_pair(point, distancia));
                     }
                 }
             }
         }
 
-        //If Target == Vec2(0,0) it means determinante is never > 0
-        std::cout << "Ponto Interno Escolhido (Target): " << target << std::endl;
-        if (target == vec2{0,0}) {
-            //TODO: What we need to do in this case? What decision we gonna make?
-            std::cout << "Erro de Target = Vec2(0,0)\n";
+        auto sorting_dist = [](const pair<vec2, double>& a, const pair<vec2, double>& b) {
+            return a.second < b.second;
+        };
+        std::sort(rank_distance.begin(), rank_distance.end(), sorting_dist);
+
+        std::cout << "Tamanho do rank distance: " << rank_distance.size() << std::endl;
+
+        //TODO: Analise para evitar arestas que se cruzem
+
+        vec2 added_point{};
+        if (rank_distance.size() == 0 || resultado.size() / 3 == 150) {
+            //std::cout << "RANK DISTANCE = 0!!!\n";
+            std::cout << "Boundary final:\n";
+            for (auto &edge : boundary) {
+                std::cout << "(" << edge.first.x << ", " << edge.first.y << "), (" <<
+                    edge.second.x << ", " << edge.second.y << "),\n";
+            }
             return resultado;
         }
+        added_point = rank_distance.front().first;
+        std::cout << "Target Final: " << added_point << std::endl;
 
-        //Now let's advance the front and we have our new triangle
-        
-        //New Triangle:
         resultado.push_back(a);
-        resultado.push_back(target);
+        resultado.push_back(added_point);
         resultado.push_back(b);
+                
+        std::cout << "Numero de Triangulos neste momento: " << resultado.size() / 3 << endl;
 
-        //Advance the boundary
-        // Checkar a lista de arestas, se aquela arestas já estava no boundary, temos que retirar,
-        // senão estava, adicionamos -> Isso em relação ao novo triangulo!
+        //Limpando o rank_distance para a proxima iteração
+        rank_distance.clear();
+
+        //Now we need to advance the front
+        boundary.erase(boundary.begin()); //100% sure b_a it was already at the front.
         
-        int delete_count = 0;
-        int index_deleted = 0;
-        for (int count = 0; count < 3; count++) {
-            if (count == 0) {
-                //Check the edge: a-target and target-a
-                for (size_t i = 0; i < boundary.size(); i++) {
-                    pair<vec2, vec2> current_pair = boundary.at(i);
-                    if ((current_pair.first == a && current_pair.second == target) || 
-                        (current_pair.first == target && current_pair.second == a)) {
-                        boundary.erase(boundary.begin() + i);
-                        delete_count++;
-                        index_deleted = i;
-                        break;
-                    }
-                }
+        //target_b
+        int aux = 0;
+        bool other = true;
+        for (auto& edge : boundary) {
+            if ((edge.first == added_point && edge.second == b) || (edge.first == b && edge.second == added_point)) {
+                boundary.erase(boundary.begin() + aux);
+                other = false;
+                break;
             }
-            else if (count == 1) {
-                //Check the edge: a-b and b-a
-                for (size_t i = 0; i < boundary.size(); i++) {
-                    pair<vec2, vec2> current_pair = boundary.at(i);
-                    if ((current_pair.first == a && current_pair.second == b) ||
-                        (current_pair.first == b && current_pair.second == a)) {
-                        boundary.erase(boundary.begin() + i);
-                        delete_count++;
-                        index_deleted = i;
-                        break;
-                    }
-                }
-            }
-            else {
-                //Check the edge: b-target and target-b
-                for (size_t i = 0; i < boundary.size(); i++) {
-                    pair<vec2, vec2> current_pair = boundary.at(i);
-                    if ((current_pair.first == b && current_pair.second == target) ||
-                        (current_pair.first == target && current_pair.second == b)) {
-                        boundary.erase(boundary.begin() + i);
-                        delete_count++;
-                        index_deleted = i;
-                        break;
-                    }
-                }
-            }
+            aux = aux + 1;
         }
 
-        if (delete_count == 1) {
-            //Add 2 novas edges no Boundary
-            pair<vec2, vec2> a_target{a, target};
-            boundary.insert(boundary.begin() + index_deleted, a_target);
-            pair<vec2, vec2> target_b{ target, b };
-            boundary.insert(boundary.begin() + index_deleted + 1, target_b);
-
-            //Update Current Edge
-            current_edge = index_deleted + 1;
-        }
-        else if (delete_count == 2) {
-            //Add 1 nova edge no boundary
-
-            if ((index_deleted > 0 && boundary.at(index_deleted - 1).second == target)
-                || (index_deleted == 0 && !(boundary.at(0).first == target))) {
-                //std::cout << "HAHHAAHAHAH" << endl;
-                pair<vec2, vec2> target_b{ target, b };
-                boundary.insert(boundary.begin() + index_deleted, target_b);
-                current_edge = index_deleted;
-            }
-            else {
-
-                pair<vec2, vec2> a_target{ a, target };
-                boundary.insert(boundary.begin() + index_deleted, a_target);
-
-                //Update Current Edge
-                current_edge = index_deleted;
-            }
-        }
-        else if (delete_count == 3) {
-            //I have already deleted the whole triangle from the boundary.
-            //TODO: We need to see if this is a good ideia, i mean, just set zero is it ok?
-            current_edge = 0;
-        }
-        else {
-            std::cout << "Algo deu errado na logica implementada: " << delete_count << std::endl;
-            std::cout << "Resultado Parcial no momento do erro:\n";
-            for (size_t i = 0; i < resultado.size(); i++) {
-                std::cout << resultado.at(i) << std::endl;
-            }
-            return resultado;
+        if (other) {
+            std::cout << "target_b adicionado a boundary!\n";
+            boundary.insert(boundary.begin(), std::make_pair(added_point, b));
         }
 
-        std::cout << "Boundary Size: " << boundary.size() << std::endl;
-
-        std::cout << "Atual Boundary:\n";
-        for (int i = 0; i < boundary.size(); i++) {
-            std::cout << "Edge: [ " << boundary.at(i).first << " ], [ " << boundary.at(i).second << " ]\n";
+        //a_target or target_a are at boundary?
+        aux = 0;
+        bool boolean = true;
+        for (auto& edge : boundary) {
+            if ((edge.first == a && edge.second == added_point) || (edge.first == added_point && edge.second == a)) {
+                boundary.erase(boundary.begin() + aux);
+                boolean = false;
+                break;
+            }
+            aux = aux + 1;
         }
 
-        //Stop Condition
-        if (boundary.size() <= 3 || resultado.size() >= 6 * ((2 * inputPoints.size()) - 2 - convexHull.size())) {
-            bool cond1 = false; bool cond2 = false;
-            if (boundary.size() <= 3) {
-                cond1 = true;
-            }
-            if (resultado.size() >= 6 * ((2 * inputPoints.size()) - 2 - convexHull.size())) {
-                cond2 = true;
-            }
-            std::cout << "Entrou no Stop Condition!!! -> Motivo: ";
-            if (cond1) {
-                std::cout << "Tamanho da fronteira <= 3\n";
-            }
-            else {
-                std::cout << "Limite Numero de Triangulos\n";
-            }
-            std::cout << "Numero de Triangulos: " << resultado.size() << std::endl;
-            std::cout << "Resultado Final dos Triangulos:\n";
-            for (size_t i = 0; i < resultado.size(); i++) {
-                std::cout << resultado.at(i) << std::endl;
-            }
-            cond = false;
+        if (boolean) {
+            std::cout << "a_target adicionado a boundary!\n";
+            boundary.insert(boundary.begin(), std::make_pair(a, added_point));
         }
-        count_loop++;
+
+        main_while_control++;
+
+        if ((boundary.size() > 0) && !(boundary.back().second == boundary.front().first)) {
+            boundary.back().second = boundary.front().first;
+        }
+
+        cout << "Boundary Atual:\n";
+        for (auto &edge: boundary) {
+            std::cout << "(" << edge.first.x << ", " << edge.first.y << "), (" <<
+                edge.second.x << ", " << edge.second.y << "),\n";
+        }
+
+        //Stop condition
+        if (boundary.empty()) {
+            std::cout << "STOP CONDITION!!\n";
+            stop_condition = true;
+        }
     }
+
     return resultado;
 }
