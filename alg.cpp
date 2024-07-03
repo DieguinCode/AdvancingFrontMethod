@@ -545,6 +545,41 @@ static bool rotationIndexPosition(const vector<pair<vec2, vec2>>* points, const 
     }
 }
 
+static bool pointInShapeRaycast(const vector<pair<vec2,vec2>>* shapeVertices, const vec2& point) {
+    // Points is a vector of polygon's vertices, e.g, for a square, we have p0, p1, p2, p3.
+    // We cast a ray from point, towards positive X. see how many times it crosses an edge
+    // even number of crossings, it's outside; odd, it's inside.
+
+    int crossingCount = 0;
+    int size = shapeVertices->size();
+    vec2 v1, v2;
+
+
+    for (int index = 0; index < size; index++) {
+        v1 = shapeVertices->at(index).first;
+        v2 = shapeVertices->at(index).second;
+
+        // First condition: at least one of the vertices should be to the right of point
+        //if ((point.x >= v1.x) && (point.x >= v2.x)) continue;
+
+        // Second condition: point.y is between v1 and v2
+        if ((point.y > v1.y) == (point.y > v2.y)) continue;
+
+        // Check Collision
+        // all the points in (v1, v2) can be obtained from v1 + (v2-v1)*t, 0 <= t <= 1.
+        // all the points in our raycast can be obtained with point + u*<1, 0>, with u >= 0.
+
+        // collision = v1 + (v2 - v1)*(point.y - v1.y)/(v2.y - v1.y)
+        vec2 collisionPoint = v1 + (v2 - v1) * ((point.y - v1.y) / (v2.y - v1.y));
+        if (collisionPoint.x >= point.x) { // if collision is to the right
+            crossingCount += 1;
+            //cout << "collided" << v1 << v2 << endl;
+        }
+    }
+    //cout << crossingCount << endl;
+    return !(crossingCount % 2 == 0);
+}
+
 static bool isConvexHull(const vector<pair<vec2, vec2>>& originalBoundary, const vec2& point) {
     for (auto &edge: originalBoundary) {
         if ((edge.first == point) || (edge.second == point)) {
@@ -591,7 +626,7 @@ vector<vec2> adf_magic(vector<vec2> inputPoints, vector<pair<vec2, vec2>>& bound
             if(!(point == a) && !(point == b)){
                 double determinante = (point.x - a.x) * (b.y - a.y) - (point.y - a.y) * (b.x - a.x);
                 if (determinante > 0.0) {
-                    if (rotationIndexPosition(&boundary, point) || isConvexHull(boundary, point)) {
+                    if (rotationIndexPosition(&boundary, point) || isConvexHull(boundary, point) || pointInShapeRaycast(&boundary, point)) {
                         double distancia_a = sqrt(std::pow(point.x - a.x, 2) + std::pow(point.y - a.y, 2));
                         double distancia_b = sqrt(std::pow(point.x - b.x, 2) + std::pow(point.y - b.y, 2));
                         double distancia = (distancia_a + distancia_b) / 2;
@@ -611,15 +646,15 @@ vector<vec2> adf_magic(vector<vec2> inputPoints, vector<pair<vec2, vec2>>& bound
         //TODO: Analise para evitar arestas que se cruzem
 
         vec2 added_point{};
-        if (rank_distance.size() == 0 || resultado.size() / 3 == 150) {
+        //if (rank_distance.size() == 0 || resultado.size() / 3 == 150) {
             //std::cout << "RANK DISTANCE = 0!!!\n";
-            std::cout << "Boundary final:\n";
-            for (auto &edge : boundary) {
-                std::cout << "(" << edge.first.x << ", " << edge.first.y << "), (" <<
-                    edge.second.x << ", " << edge.second.y << "),\n";
-            }
-            return resultado;
-        }
+            //std::cout << "Boundary final:\n";
+            //for (auto &edge : boundary) {
+                //std::cout << "(" << edge.first.x << ", " << edge.first.y << "), (" <<
+                    //edge.second.x << ", " << edge.second.y << "),\n";
+            //}
+            //return resultado;
+        //}
         added_point = rank_distance.front().first;
         std::cout << "Target Final: " << added_point << std::endl;
 

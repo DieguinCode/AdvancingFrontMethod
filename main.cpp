@@ -233,7 +233,7 @@ int main() {
     uniform_real_distribution<> dis(-500.0, 500.0);
 
     vector<vec2> inputPoints{};
-    int iterationSize = 20; //100 or 1000
+    int iterationSize = 50; //100 or 1000
     int pointCount = 0;
     for (int i = 0; i < iterationSize; i++) {
         inputPoints.push_back(vec2(((dis(gen))), ((dis(gen)))));
