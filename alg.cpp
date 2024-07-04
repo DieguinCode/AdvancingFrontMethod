@@ -1,5 +1,7 @@
 #include "alg.hpp"
 #include <iostream>
+#include <list>
+#include <array>
 
 using namespace std;
 
@@ -507,6 +509,46 @@ bool intersec2D(const pair<vec2, vec2>& r, const pair<vec2, vec2>& s) {
 
 }
 
+bool intersec2DExcludePoints(const pair<vec2, vec2>& r, const pair<vec2, vec2>& s) {
+
+    vec2 k = r.first; vec2 l = r.second;
+    vec2 m = s.first; vec2 n = s.second;
+
+    if (k == l || m == n) {
+        std::cout << "Problema 1 em intersec2D" << std::endl;
+        return false;
+    }
+
+    if ((k == m && l == n) || (k == n && l == m)) {
+        std::cout << "Segmentos iguais foram passados para intersec2D\n";
+        return false;
+    }
+
+    if (k == m || k == n || l == m || l == n) {
+        //cout << "contato no mesmo ponto, ignorado\n";
+        return false;
+    }
+
+    // (ab x ac).mag times (ab x ad).mag > 0    E    (cd x ca).mag times (cd x cb).mag > 0
+
+    double check1 = ((l - k).cross(m - k)) * ((l - k).cross(n - k));
+    if (check1 > 0) return false;
+    double check2 = ((n - m).cross(k - m)) * ((n - m).cross(l - m));
+    if (check2 > 0) return false;
+
+    // collinear case
+    //cout << "checks " << check1 << " " << check2 << endl;
+    if (check1 == 0 && check2 == 0) {
+        if (k.x > m.x && k.x < n.x) return true;
+        if (k.x < m.x && k.x > n.x) return true;
+        if (l.x > m.x && l.x < n.x) return true;
+        if (l.x < m.x && l.x > n.x) return true;
+        return false;
+    }
+
+    return true;
+}
+
 static bool rotationIndexPosition(const vector<pair<vec2, vec2>>* points, const vec2& q) {
     //Points is a vector of polygon's vertices, e.g, for a square, we have p0, p1, p2, p3.
 
@@ -724,4 +766,145 @@ vector<vec2> adf_magic(vector<vec2> inputPoints, vector<pair<vec2, vec2>>& bound
     }
 
     return resultado;
+}
+
+vector<vec2> adf2(vector<vec2> inputPoints, vector<vec2>& convexHull) {
+    vector<array<vec2, 3>> triangles{};
+
+    //List of Edges in the current Boundary (In first moment, it's the convexHull itself).
+    //Not using queue because we need to remove middle elements later.
+    std::list<pair<vec2, vec2>> boundary{};
+    for (int i = 0; i < convexHull.size() - 1; i++) {
+        pair<vec2, vec2> new_edge{};
+        new_edge.first = convexHull.at(i);
+        new_edge.second = convexHull.at(i + 1);
+        boundary.push_back(new_edge);
+        //std::cout << "Edge " << i + 1 << ": " << "[ " << new_pair.first << " ], [ " << new_pair.second << " ]\n";
+    }
+    //invert for tests
+    //for (int i = convexHull.size() - 1; i >= 1; i--) {
+    //    pair<vec2, vec2> new_edge{};
+    //    new_edge.first = convexHull.at(i);
+    //    new_edge.second = convexHull.at(i - 1);
+    //    boundary.push_back(new_edge);
+    //    //std::cout << "Edge " << i + 1 << ": " << "[ " << new_pair.first << " ], [ " << new_pair.second << " ]\n";
+    //}
+
+    bool cond = true;
+    //int current_edge = 0;
+    pair<vec2, vec2> boundaryEdge;
+    int count_loop = 0;
+    while (cond) {
+        if (boundary.size() == 0) break;
+        cout << endl << "current boundary: " << endl;
+        for (const pair<vec2, vec2> edge : boundary) {
+            cout << edge.first << " " << edge.second << endl;
+        }
+
+        //dequeue
+        boundaryEdge = boundary.front();
+        boundary.pop_front();
+
+        //First, we need the current boundary edge AB.
+        vec2 pointA = boundaryEdge.first;
+        vec2 pointB = boundaryEdge.second;
+
+        //Find the best point to the left of AB among all points
+        //TODO: Decide between either a ranking list for all points or just the best point
+        double determinant = -INFINITY;
+        vec2 pointC{ 0,0 };
+        bool exceptionNoPointChosen = true;
+        for (vec2 point : inputPoints) {
+            double testDeterminant = (pointB - pointA).cross(point - pointA);
+            cout << "candidate: " << point << "   determinant: " << testDeterminant << endl;
+            if (testDeterminant >= 0.0) continue; //eliminates A and B and anything to the left of AB.
+            if (testDeterminant > determinant) {
+                //test intersections on the entire boundary
+                bool intersectsBoundary = false;
+                for (const pair<vec2, vec2> edge : boundary) {
+                    bool doesACIntersect = intersec2DExcludePoints(make_pair(pointA, point), edge);
+                    bool doesCBIntersect = intersec2DExcludePoints(make_pair(point, pointB), edge);
+                    if (doesACIntersect || doesCBIntersect) {
+                        intersectsBoundary = true;
+                        cout << "intersection with C:" << point << " and boundary edge " << edge.first << edge.second << endl;
+                        break;
+                    }
+                }
+                if (intersectsBoundary) continue;
+
+                determinant = testDeterminant;
+                pointC = point;
+                exceptionNoPointChosen = false;
+            }
+        }
+
+        //If Target == Vec2(0,0) it means determinante is never > 0
+        std::cout << "Ponto Interno Escolhido (Target): " << pointC << std::endl;
+        if (exceptionNoPointChosen) {
+            //TODO: What we need to do in this case? What decision we gonna make?
+            std::cout << "Erro de Target: Nenhum ponto C foi escolhido.";
+            return vector<vec2>();
+        }
+
+        //Advance the boundary.
+        //AB was already removed by popping the boundary queue.
+
+        bool removedEdge = false;
+        //If AC exists on the boundary, remove it, else add it.
+        for (const pair<vec2, vec2> edge : boundary) {
+            if (edge.first == pointA && edge.second == pointC) {
+                boundary.remove(edge);
+                removedEdge = true;
+                break; //iterator may break if we remove an element.
+            }
+            if (edge.first == pointC && edge.second == pointA) {
+                boundary.remove(edge);
+                removedEdge = true;
+                break; //iterator may break if we remove an element.
+            }
+        }
+        if (removedEdge == false) {
+            boundary.push_back(pair<vec2, vec2>(pointA, pointC)); //removedEdge = false;
+            cout << "added boundary edge " << pointA << " " << pointC << endl;
+        }
+        else {
+            cout << "removed boundary edge " << pointA << " " << pointC << endl;
+        }
+        removedEdge = false;
+
+        //Same for CB (yes, CB not BC, we continue traversing counter-clockwise)
+        for (const pair<vec2, vec2> edge : boundary) {
+            if (edge.first == pointC && edge.second == pointB) {
+                boundary.remove(edge);
+                removedEdge = true;
+                break; //iterator may break if we remove an element.
+            }
+            if (edge.first == pointB && edge.second == pointC) {
+                boundary.remove(edge);
+                removedEdge = true;
+                break; //iterator may break if we remove an element.
+            }
+        }
+        if (removedEdge == false) {
+            boundary.push_back(pair<vec2, vec2>(pointC, pointB)); //removedEdge = false;
+            cout << "added boundary edge " << pointC << " " << pointB << endl;
+        }
+        else {
+            cout << "removed boundary edge " << pointC << " " << pointB << endl;
+        }
+
+        //Finally, add the triangle to the return vector. Make sure triangle is counter-clockwise as ABC.
+        std::array<vec2, 3> tri{ pointA, pointB, pointC };
+        triangles.push_back(tri);
+        std::cout << "Adicionad triangulo - A:" << pointA << " B:" << pointB << " C:" << pointC << std::endl;
+    }
+
+    vector<vec2> result{};
+    for (array<vec2, 3> tri : triangles) {
+        result.push_back(tri[0]);
+        result.push_back(tri[1]);
+        result.push_back(tri[2]);
+    }
+
+    return result;
 }

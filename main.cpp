@@ -211,9 +211,9 @@ int main() {
     //};
 
     //std::vector<vec2> inputPoints = {
-        //{1.1, 1.2}, {2.3, 1.4}, {4.5, 3.6}, {3.7, 4.01}, {1.9, -3.01}, {3.12, -2.34},
-            //{-2.56, -1.78}, {-4.91, -3.123}, {-3.456, 3.789}, {-2.1111, 2.2222}
-    //}; -> OK
+    //    {1.1, 1.2}, {2.3, 1.4}, {4.5, 3.6}, {3.7, 4.01}, {1.9, -3.01}, {3.12, -2.34},
+    //        {-2.56, -1.78}, {-4.91, -3.123}, {-3.456, 3.789}, {-2.1111, 2.2222}
+    //};
     
     //vec2 a{ 1.0, 1.0 };
     //vec2 b{ 1.0, -1.0 };
@@ -224,22 +224,33 @@ int main() {
 
     //SQUARE
     //std::vector<vec2> inputPoints{
-        //{1, 2}, {1, 7}, {6, 2}, {6, 7}
-        //, {3.5, 4.5}  //Centroid 
+    //    {1, 2}, {1, 7}, {6, 2}, {6, 7}
+    //    , {3.5, 4.5}  //Centroid 
+    //};
+
+    //BETTER CIRCLE CENTROID
+    //std::vector<vec2> inputPoints{
+    //    {0,0}, {0,-1}, {0,1}, {1, 0}, {-1, 0},
+    //    {2,2}, {-2,-2}, {2,-2}, {-2,2},
+    //    {3,0}, {0,3}, {-3, 0}, {0, -3}
     //};
 
     random_device rd;
     mt19937 gen(rd());
-    uniform_real_distribution<> dis(-500.0, 500.0);
-
+    uniform_real_distribution<> dis(-50.0, 50.0);
     vector<vec2> inputPoints{};
     int iterationSize = 50; //100 or 1000
     int pointCount = 0;
     for (int i = 0; i < iterationSize; i++) {
-        inputPoints.push_back(vec2(((dis(gen))), ((dis(gen)))));
+        //vec2 point = vec2(round(dis(gen)), round(dis(gen)));
+        vec2 point = vec2(dis(gen), dis(gen));
+        inputPoints.push_back(point);
+        //inputPoints.push_back(vec2(((dis(gen))), ((dis(gen)))));
         pointCount += 1;
+        cout << point << endl;
         if (pointCount >= iterationSize) break;
     }
+    cout << endl;
 
     vector<vec2> copy{ inputPoints.begin(), inputPoints.end() };
 
@@ -258,7 +269,8 @@ int main() {
     //}
     //cout << endl;
 
-    vector<vec2> triangulation = advancingFront(inputPoints);
+    //vector<vec2> triangulation = advancingFront(inputPoints);
+    vector<vec2> triangulation = adf2(inputPoints, convexHull);
 
     //auto elapsed = end - start;
     //cout  << "Jarvis Time: " << duration_cast<milliseconds>(elapsed).count() << " ms" << endl;

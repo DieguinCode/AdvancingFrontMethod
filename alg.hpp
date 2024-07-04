@@ -35,5 +35,7 @@ vector<vec2> mergeHull(vector<vec2> points);
 //Advancing Front
 vector<vec2> advancingFront(vector<vec2>& inputPoints);
 vector<vec2> adf_magic(vector<vec2> inputPoints, vector<pair<vec2,vec2>>& boundary);
+vector<vec2> adf2(vector<vec2> inputPoints, vector<vec2>& convexHull);
 bool intersec2D(const pair<vec2, vec2>& r, const pair<vec2, vec2>& s);
+bool intersec2DExcludePoints(const pair<vec2, vec2>& r, const pair<vec2, vec2>& s);
 //bool find_invalid_edge(const pair<vec2, vec2>& target, const vector<pair<vec2, vec2>>& boundary);
