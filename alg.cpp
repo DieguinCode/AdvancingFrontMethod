@@ -515,12 +515,12 @@ bool intersec2DExcludePoints(const pair<vec2, vec2>& r, const pair<vec2, vec2>& 
     vec2 m = s.first; vec2 n = s.second;
 
     if (k == l || m == n) {
-        std::cout << "Problema 1 em intersec2D" << std::endl;
+        //std::cout << "Problema 1 em intersec2D" << std::endl;
         return false;
     }
 
     if ((k == m && l == n) || (k == n && l == m)) {
-        std::cout << "Segmentos iguais foram passados para intersec2D\n";
+        //std::cout << "Segmentos iguais foram passados para intersec2D\n";
         return false;
     }
 
@@ -796,10 +796,10 @@ vector<vec2> adf2(vector<vec2> inputPoints, vector<vec2>& convexHull) {
     int count_loop = 0;
     while (cond) {
         if (boundary.size() == 0) break;
-        cout << endl << "current boundary: " << endl;
-        for (const pair<vec2, vec2> edge : boundary) {
-            cout << edge.first << " " << edge.second << endl;
-        }
+        //cout << endl << "current boundary: " << endl;
+        //for (const pair<vec2, vec2> edge : boundary) {
+        //    cout << edge.first << " " << edge.second << endl;
+        //}
 
         //dequeue
         boundaryEdge = boundary.front();
@@ -816,7 +816,7 @@ vector<vec2> adf2(vector<vec2> inputPoints, vector<vec2>& convexHull) {
         bool exceptionNoPointChosen = true;
         for (vec2 point : inputPoints) {
             double testDeterminant = (pointB - pointA).cross(point - pointA);
-            cout << "candidate: " << point << "   determinant: " << testDeterminant << endl;
+            //cout << "candidate: " << point << "   determinant: " << testDeterminant << endl;
             if (testDeterminant >= 0.0) continue; //eliminates A and B and anything to the left of AB.
             if (testDeterminant > determinant) {
                 //test intersections on the entire boundary
@@ -826,7 +826,7 @@ vector<vec2> adf2(vector<vec2> inputPoints, vector<vec2>& convexHull) {
                     bool doesCBIntersect = intersec2DExcludePoints(make_pair(point, pointB), edge);
                     if (doesACIntersect || doesCBIntersect) {
                         intersectsBoundary = true;
-                        cout << "intersection with C:" << point << " and boundary edge " << edge.first << edge.second << endl;
+                        //cout << "intersection with C:" << point << " and boundary edge " << edge.first << edge.second << endl;
                         break;
                     }
                 }
@@ -839,7 +839,7 @@ vector<vec2> adf2(vector<vec2> inputPoints, vector<vec2>& convexHull) {
         }
 
         //If Target == Vec2(0,0) it means determinante is never > 0
-        std::cout << "Ponto Interno Escolhido (Target): " << pointC << std::endl;
+        //std::cout << "Ponto Interno Escolhido (Target): " << pointC << std::endl;
         if (exceptionNoPointChosen) {
             //TODO: What we need to do in this case? What decision we gonna make?
             std::cout << "Erro de Target: Nenhum ponto C foi escolhido.";
@@ -865,11 +865,11 @@ vector<vec2> adf2(vector<vec2> inputPoints, vector<vec2>& convexHull) {
         }
         if (removedEdge == false) {
             boundary.push_back(pair<vec2, vec2>(pointA, pointC)); //removedEdge = false;
-            cout << "added boundary edge " << pointA << " " << pointC << endl;
+            //cout << "added boundary edge " << pointA << " " << pointC << endl;
         }
-        else {
-            cout << "removed boundary edge " << pointA << " " << pointC << endl;
-        }
+        //else {
+        //    cout << "removed boundary edge " << pointA << " " << pointC << endl;
+        //}
         removedEdge = false;
 
         //Same for CB (yes, CB not BC, we continue traversing counter-clockwise)
@@ -887,16 +887,16 @@ vector<vec2> adf2(vector<vec2> inputPoints, vector<vec2>& convexHull) {
         }
         if (removedEdge == false) {
             boundary.push_back(pair<vec2, vec2>(pointC, pointB)); //removedEdge = false;
-            cout << "added boundary edge " << pointC << " " << pointB << endl;
+            //cout << "added boundary edge " << pointC << " " << pointB << endl;
         }
-        else {
-            cout << "removed boundary edge " << pointC << " " << pointB << endl;
-        }
+        //else {
+        //    cout << "removed boundary edge " << pointC << " " << pointB << endl;
+        //}
 
         //Finally, add the triangle to the return vector. Make sure triangle is counter-clockwise as ABC.
         std::array<vec2, 3> tri{ pointA, pointB, pointC };
         triangles.push_back(tri);
-        std::cout << "Adicionad triangulo - A:" << pointA << " B:" << pointB << " C:" << pointC << std::endl;
+        //std::cout << "Adicionad triangulo - A:" << pointA << " B:" << pointB << " C:" << pointC << std::endl;
     }
 
     vector<vec2> result{};

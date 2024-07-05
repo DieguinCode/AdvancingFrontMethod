@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <ctime>
 #include "alg.hpp"
+#include "objalgorithms.hpp"
 #include <random>
 #include <chrono>
 
@@ -258,38 +259,25 @@ int main() {
 
     // Call the Convex Hull magic!
     std::vector<vec2> convexHull = jarvis(&copy);
-    
-    //auto end = steady_clock::now();
-
-    //I would like to see at a terminal too
-    //std::cout << "Convex Hull: " << endl;
-
-    //for (int i = 0; i < convexHull.size(); i++) {
-        //std::cout << convexHull.at(i) << endl;
-    //}
-    //cout << endl;
 
     //vector<vec2> triangulation = advancingFront(inputPoints);
     vector<vec2> triangulation = adf2(inputPoints, convexHull);
 
-    //auto elapsed = end - start;
-    //cout  << "Jarvis Time: " << duration_cast<milliseconds>(elapsed).count() << " ms" << endl;
 
-    //Let's compare with MergeHull
-    //auto inicio = steady_clock::now();
-    //vector<vec2> convex = mergeHull(copy);
-    //auto fim = steady_clock::now();
 
-    //auto duration = fim - inicio;
-    //cout << "MergeHull Time: " << duration_cast<milliseconds>(duration).count() << " ms" << endl;
+    //load the model
+    Mesh* onix = ObjUtils::loadMesh("onix.obj");
+    triangulation = advancingFrontObj(onix);
+
+
 
     // Build the shader program
     GLuint shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
 
     // Calculate the limits (points)
-    vec2 minPos = inputPoints[0];
-    vec2 maxPos = inputPoints[0];
-    for (const auto& point : inputPoints) {
+    vec2 minPos = triangulation[0];
+    vec2 maxPos = triangulation[0];
+    for (const auto& point : triangulation) {
         minPos.x = std::min(minPos.x, point.x);
         minPos.y = std::min(minPos.y, point.y);
         maxPos.x = std::max(maxPos.x, point.x);
@@ -315,10 +303,10 @@ int main() {
         glUniform2f(maxPosLoc, maxPos.x, maxPos.y);
 
         // Draw the points
-        drawInputPoints(inputPoints, shaderProgram);
+        //drawInputPoints(inputPoints, shaderProgram);
 
         // Draw the edges
-        drawConvexHull(convexHull, shaderProgram);
+        //drawConvexHull(convexHull, shaderProgram);
 
         //Draw the Triangulation
         drawTriangulation(triangulation, shaderProgram);
