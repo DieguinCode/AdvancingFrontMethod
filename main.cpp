@@ -238,9 +238,9 @@ int main() {
 
     random_device rd;
     mt19937 gen(rd());
-    uniform_real_distribution<> dis(-50.0, 50.0);
+    uniform_real_distribution<> dis(-500.0, 500.0);
     vector<vec2> inputPoints{};
-    int iterationSize = 50; //100 or 1000
+    int iterationSize = 20; //100 or 1000
     int pointCount = 0;
     for (int i = 0; i < iterationSize; i++) {
         //vec2 point = vec2(round(dis(gen)), round(dis(gen)));
@@ -248,26 +248,19 @@ int main() {
         inputPoints.push_back(point);
         //inputPoints.push_back(vec2(((dis(gen))), ((dis(gen)))));
         pointCount += 1;
-        cout << point << endl;
+        //cout << point << endl;
         if (pointCount >= iterationSize) break;
     }
-    cout << endl;
+    //cout << endl;
 
     vector<vec2> copy{ inputPoints.begin(), inputPoints.end() };
 
-    //auto start = steady_clock::now();
-
-    // Call the Convex Hull magic!
     std::vector<vec2> convexHull = jarvis(&copy);
-
-    //vector<vec2> triangulation = advancingFront(inputPoints);
     vector<vec2> triangulation = adf2(inputPoints, convexHull);
 
-
-
     //load the model
-    Mesh* onix = ObjUtils::loadMesh("onix.obj");
-    triangulation = advancingFrontObj(onix);
+    //Mesh* onix = ObjUtils::loadMesh("onix.obj");
+    //triangulation = advancingFrontObj(onix);
 
 
 
@@ -303,10 +296,10 @@ int main() {
         glUniform2f(maxPosLoc, maxPos.x, maxPos.y);
 
         // Draw the points
-        //drawInputPoints(inputPoints, shaderProgram);
+        drawInputPoints(inputPoints, shaderProgram);
 
         // Draw the edges
-        //drawConvexHull(convexHull, shaderProgram);
+        drawConvexHull(convexHull, shaderProgram);
 
         //Draw the Triangulation
         drawTriangulation(triangulation, shaderProgram);
