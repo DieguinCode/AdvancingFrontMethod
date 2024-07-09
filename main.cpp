@@ -93,7 +93,7 @@ static void drawInputPoints(const std::vector<vec2>& points, GLuint shaderProgra
 static void drawConvexHull(const std::vector<vec2>& points, GLuint shaderProgram) {
     // Check if there are enough points to build a convex hull
     if (points.size() < 3) {
-        std::cerr << "É necessário pelo menos 3 pontos para desenhar o convex hull!" << std::endl;
+        std::cerr << "ï¿½ necessï¿½rio pelo menos 3 pontos para desenhar o convex hull!" << std::endl;
         return;
     }
 
@@ -220,8 +220,8 @@ int main() {
     //vec2 b{ 1.0, -1.0 };
 
     //bool tmp_cond = a.is_left(b);
-    //if (tmp_cond) { std::cout << "'A' está à esquerda de 'B'" << std::endl; }
-    //else { std::cout << "'A' está à direita de 'B'" << std::endl; }
+    //if (tmp_cond) { std::cout << "'A' estï¿½ ï¿½ esquerda de 'B'" << std::endl; }
+    //else { std::cout << "'A' estï¿½ ï¿½ direita de 'B'" << std::endl; }
 
     //SQUARE
     //std::vector<vec2> inputPoints{
@@ -236,32 +236,40 @@ int main() {
     //    {3,0}, {0,3}, {-3, 0}, {0, -3}
     //};
 
-    random_device rd;
-    mt19937 gen(rd());
-    uniform_real_distribution<> dis(-500.0, 500.0);
-    vector<vec2> inputPoints{};
-    int iterationSize = 20; //100 or 1000
-    int pointCount = 0;
-    for (int i = 0; i < iterationSize; i++) {
-        //vec2 point = vec2(round(dis(gen)), round(dis(gen)));
-        vec2 point = vec2(dis(gen), dis(gen));
-        inputPoints.push_back(point);
-        //inputPoints.push_back(vec2(((dis(gen))), ((dis(gen)))));
-        pointCount += 1;
-        //cout << point << endl;
-        if (pointCount >= iterationSize) break;
+     random_device rd;
+     mt19937 gen(rd());
+     uniform_real_distribution<> dis(-500.0, 500.0);
+     vector<vec2> inputPoints{};
+     int iterationSize = 20; //100 or 1000
+     int pointCount = 0;
+     for (int i = 0; i < iterationSize; i++) {
+         //vec2 point = vec2(round(dis(gen)), round(dis(gen)));
+         vec2 point = vec2(dis(gen), dis(gen));
+         inputPoints.push_back(point);
+         //inputPoints.push_back(vec2(((dis(gen))), ((dis(gen)))));
+         pointCount += 1;
+         //cout << point << endl;
+         if (pointCount >= iterationSize) break;
+     }
+     //cout << endl;
+
+     vector<vec2> copy{ inputPoints.begin(), inputPoints.end() };
+
+     std::vector<vec2> convexHull = jarvis(&copy);
+    // vector<vec2> triangulation = adf2(inputPoints, convexHull);
+
+    vector<vec2> triangulation = vector<vec2>();
+
+    Mesh* onix = ObjUtils::loadMesh("onix.obj");
+    vector<vector<vec2>> onixADFResult = advancingFrontObjFirstStep(onix);
+    for (vector<vec2> subObjectPoints : onixADFResult) {
+        for (vec2 point : subObjectPoints) {
+            triangulation.push_back(point);
+        }
     }
-    //cout << endl;
-
-    vector<vec2> copy{ inputPoints.begin(), inputPoints.end() };
-
-    std::vector<vec2> convexHull = jarvis(&copy);
-    vector<vec2> triangulation = adf2(inputPoints, convexHull);
-
-    //load the model
-    //Mesh* onix = ObjUtils::loadMesh("onix.obj");
-    //triangulation = advancingFrontObj(onix);
-
+    Mesh* triangulatedOnix = advancingFrontObjSecondStep(onixADFResult, "triangulated_onix");
+    ObjUtils::saveMesh(triangulatedOnix, "triangulated_onix.obj");
+    ObjUtils::saveMesh(onix, "onix_nochange.obj");
 
 
     // Build the shader program
